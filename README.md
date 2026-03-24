@@ -2,6 +2,22 @@
 
 A full-stack news platform with AI-powered semantic search and article recommendations. Built with FastAPI, MySQL, OpenAI embeddings, and FAISS.
 
+## Live Demo
+
+- App: http://18.217.82.42  
+- API Docs: http://18.217.82.42/docs
+- Status: Live on AWS EC2 (may take a few seconds to wake up)  
+
+## Highlights
+
+- Built a full-stack AI news platform using FastAPI, MySQL, and Vanilla JavaScript  
+- Implemented semantic search with OpenAI embeddings and FAISS  
+- Added related article recommendations based on vector similarity  
+- Automated news ingestion from RSS feeds and NewsAPI twice daily  
+- Deployed on AWS EC2 with Nginx reverse proxy and production-ready API routing
+- Designed for extensibility with modular API and service layers
+- Built with production-ready patterns including background scheduling and fault-tolerant AI services
+
 ```
 ┌─────────────────────┐    HTTP/JSON    ┌──────────────────────────┐
 │  news-frontend-ai   │ ◄─────────────► │  FastAPI + MySQL         │
@@ -18,7 +34,7 @@ A full-stack news platform with AI-powered semantic search and article recommend
 |---------|-------------|
 | **Semantic Search** | Natural language search via OpenAI embeddings + FAISS — finds meaning, not just keywords |
 | **Related Articles** | Per-article recommendations using cosine similarity on pre-computed embeddings |
-| **News Scraping** | Auto-scrapes RSS feeds (TechCrunch, Wired, Ars Technica, The Verge) + NewsAPI on startup and every 6 hours |
+| **News Scraping** | Auto-scrapes RSS feeds + NewsAPI on startup and refreshes content twice daily |
 | **Auth** | Token-based auth, SHA-256 hashed, server-side logout |
 | **Favorites & History** | Save articles, track reading history per user |
 | **Graceful Degradation** | AI features fail silently — server always starts, falls back to category-based results |
@@ -57,19 +73,21 @@ mysql -u root -p < database/database.sql
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 On startup the server will:
 1. Scrape latest tech news from RSS + NewsAPI
 2. Embed all articles via OpenAI and build the FAISS index
-3. Start the cron scheduler (re-scrapes at 06:00 and 18:00 UTC)
+3. Start the cron scheduler (runs twice daily)
 
 ### 4. Open the frontend
 
-Open `frontend/news-frontend-ai.html` directly in a browser — no build step needed.
+For local development, open `frontend/news-frontend-ai.html` directly in a browser.
+In production, the frontend is served via Nginx on EC2.
 
-Interactive API docs: **http://localhost:8000/docs**
+Interactive API docs (local): **http://localhost:8000/docs**  
+Production: **http://18.217.82.42/docs**
 
 ## Environment Variables
 
@@ -82,8 +100,8 @@ Copy `backend/.env.example` to `backend/.env` and fill in:
 | `DB_USER` | ✓ | MySQL username |
 | `DB_PASSWORD` | ✓ | MySQL password |
 | `DB_NAME` | ✓ | Database name (default `news_app`) |
-| `OPENAI_API_KEY` | ✓ | OpenAI key — [get one free](https://platform.openai.com) |
-| `NEWS_API_KEY` | optional | NewsAPI key — [get one free](https://newsapi.org). Scraper still works via RSS if unset |
+| `OPENAI_API_KEY` | ✓ | OpenAI API key used for semantic embeddings |
+| `NEWS_API_KEY` | optional | NewsAPI key for additional news sources (optional, RSS still works without it) |
 | `TOKEN_TTL_DAYS` | | Token expiry in days (default `7`) |
 | `CORS_ORIGINS` | | Allowed origins, comma-separated (default `*`) |
 | `DEBUG` | | Set `true` to expose error details in responses |
@@ -144,8 +162,18 @@ Rebuild FAISS IndexFlatIP
       ├─ L2-normalize all vectors
       └─ Inner product == cosine similarity
 ```
+Supports fast approximate similarity search over thousands of articles using FAISS.
 
 Cost: `text-embedding-3-small` ≈ $0.02 per 1M tokens. Embedding 10,000 articles costs ~$0.02 total.
+
+## Deployment
+
+### Production (AWS EC2)
+
+- Backend: FastAPI (Uvicorn) running on EC2  
+- Frontend: Served via Nginx  
+- Reverse proxy: `/api/*` → `localhost:8000`  
+- Database: MySQL (local instance)  
 
 ## Project Structure
 
@@ -180,7 +208,9 @@ Cost: `text-embedding-3-small` ≈ $0.02 per 1M tokens. Embedding 10,000 article
 
 ## API Reference
 
-Full spec: [`api-docs/api-spec.md`](api-docs/api-spec.md) | Interactive: http://localhost:8000/docs
+Full spec: [`api-docs/api-spec.md`](api-docs/api-spec.md)  
+Interactive (local): http://localhost:8000/docs  
+Production: http://18.217.82.42/docs
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
