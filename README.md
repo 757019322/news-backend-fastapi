@@ -87,7 +87,7 @@ For local development, open `frontend/news-frontend-ai.html` directly in a brows
 In production, the frontend is served via Nginx on EC2.
 
 Interactive API docs (local): **http://localhost:8000/docs**  
-Production: **http://18.217.82.42/docs**
+Production: **http://3.17.170.220/docs**
 
 ## Environment Variables
 
