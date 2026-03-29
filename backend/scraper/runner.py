@@ -15,7 +15,8 @@ from scraper.sources import RSS_SOURCES
 
 AD_KEYWORDS = [
     "promo code", "coupon", "% off", "save up to",
-    "discount code", "deal of the day", "voucher"
+    "discount code", "deal of the day", "voucher",
+    "deals", "discount codes and deals", "promo codes"
 ]
 
 logger = logging.getLogger(__name__)
